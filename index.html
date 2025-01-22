@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración de Restaurante</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between">
+                <div class="flex space-x-7">
+                    <div class="flex items-center py-4">
+                        <span class="font-semibold text-gray-500 text-lg">Restaurant Manager</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="showSection('menu')" class="py-2 px-4 text-gray-500 hover:text-gray-700 font-semibold">Menú</button>
+                    <button onclick="showSection('ventas')" class="py-2 px-4 text-gray-500 hover:text-gray-700 font-semibold">Ventas</button>
+                    <button onclick="showSection('estadisticas')" class="py-2 px-4 text-gray-500 hover:text-gray-700 font-semibold">Estadísticas</button>
+                    <button onclick="showSection('ventasAnteriores')" class="py-2 px-4 text-gray-500 hover:text-gray-700 font-semibold">Ventas Anteriores</button>
+
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sección Menú -->
+    <div id="menu" class="section max-w-6xl mx-auto mt-8 p-4">
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">Gestión de Menú</h2>
+                <button onclick="showModal('menuForm')" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Nuevo Plato</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full table-auto">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoría</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Precio</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="menuTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección Ventas -->
+    <div id="ventas" class="section max-w-6xl mx-auto mt-8 p-4 hidden">
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">Registro de Ventas</h2>
+                <button onclick="showModal('ventaForm')" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">Nueva Venta</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full table-auto">
+                    <thead class="bg-gray-50">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mesa</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Platos</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hora</th> <!-- Nuevo encabezado -->
+                            </tr>
+                        </thead>
+                        
+                    </thead>
+                    <tbody id="ventasTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección Estadísticas -->
+    <div id="estadisticas" class="section max-w-6xl mx-auto mt-8 p-4 hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-xl font-bold mb-4">Estadísticas Diarias</h2>
+                <div id="estadisticasDiarias" class="space-y-4">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="text-sm font-medium text-gray-500">Ventas Totales Hoy</h3>
+                        <p id="ventasHoy" class="text-2xl font-bold">$0</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="text-sm font-medium text-gray-500">Platos Más Vendidos</h3>
+                        <ul id="platosMasVendidosHoy" class="mt-2 space-y-1"></ul>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-bold mb-4">Concurrencia</h3>
+                <canvas id="concurrenciaDiariaChart"></canvas>
+            </div>
+            
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-bold mb-4">Ventas Diarias</h3>
+                <canvas id="ventasDiariasPlatosChart"></canvas>
+            </div>
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-xl font-bold mb-4">Estadísticas Mensuales</h2>
+                <div>
+                    <canvas id="ventasMensualesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección Ventas Anteriores -->
+<div id="ventasAnteriores" class="section max-w-6xl mx-auto mt-8 p-4 hidden">
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-xl font-bold mb-4">Ventas Anteriores</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full table-auto">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hora</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mesa</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Platos</th>
+                    </tr>
+                </thead>
+                <tbody id="ventasAnterioresTable"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+    <!-- Modal Nuevo Plato -->
+    <div id="menuForm" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <h3 class="text-lg font-medium mb-4">Nuevo Plato</h3>
+            <form id="newDishForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                    <input type="text" name="nombre" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Categoría</label>
+                    <select name="categoria" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="Entrada">Entrada</option>
+                        <option value="Plato Principal">Plato Principal</option>
+                        <option value="Postre">Postre</option>
+                        <option value="Bebida">Bebida</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Precio</label>
+                    <input type="number" name="precio" step="0.01" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('menuForm')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Nueva Venta -->
+    <div id="ventaForm" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <h3 class="text-lg font-medium mb-4">Nueva Venta</h3>
+            <form id="newSaleForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Mesa</label>
+                    <input type="number" name="mesa" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div id="platosVenta">
+                    <label class="block text-sm font-medium text-gray-700">Platos</label>
+                    <div class="space-y-2" id="platosContainer"></div>
+                    <button type="button" onclick="agregarPlatoVenta()" class="mt-2 px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm">+ Agregar Plato</button>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('ventaForm')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Registrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="./js/script.js"></script>
+</body>
+</html>
