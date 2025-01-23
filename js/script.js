@@ -383,5 +383,13 @@ function actualizarTablaVentasAnteriores() {
 }
 document.getElementById('menuToggle').addEventListener('click', () => {
     const menu = document.getElementById('menus');
-    menu.classList.toggle('hidden');
+    
+    if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+        menu.classList.add('flex', 'animate-slide-down'); // Mostrar con animación
+    } else {
+        menu.classList.add('hidden'); // Ocultar
+        menu.classList.remove('flex', 'animate-slide-down');
+    }
 });
+
