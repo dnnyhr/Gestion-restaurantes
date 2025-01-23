@@ -60,7 +60,7 @@ function actualizarTablaMenu() {
         <tr>
             <td class="px-6 py-4">${plato.nombre}</td>
             <td class="px-6 py-4">${plato.categoria}</td>
-            <td class="px-6 py-4">$${plato.precio.toFixed(2)}</td>
+           <td class="px-6 py-4">C$${plato.precio.toFixed(2)}</td>
             <td class="px-6 py-4">
                 <button onclick="eliminarPlato(${plato.id})" class="text-red-600 hover:text-red-900">Eliminar</button>
             </td>
@@ -127,12 +127,13 @@ function actualizarTablaVentas() {
     const tabla = document.getElementById('ventasTable');
     tabla.innerHTML = ventas.map(venta => `
         <tr>
-            <td class="px-6 py-4">Mesa ${venta.mesa}</td>
-            <td class="px-6 py-4">
-                ${venta.platos.map(item => 
-                    `${item.cantidad}x ${item.plato.nombre} ($${item.subtotal.toFixed(2)})`
-                ).join('<br>')}
-            </td>
+            <td class="px-6 py-4">C$${venta.total.toFixed(2)}</td>
+<td class="px-6 py-4">
+    ${venta.platos.map(item => 
+        `${item.cantidad}x ${item.plato.nombre} (C$${item.subtotal.toFixed(2)})`
+    ).join('<br>')}
+</td>
+
             <td class="px-6 py-4">$${venta.total.toFixed(2)}</td>
             <td class="px-6 py-4">${new Date(venta.fecha).toLocaleDateString()}</td>
             <td class="px-6 py-4">${venta.hora}</td> <!-- Nueva columna para hora -->
@@ -155,7 +156,8 @@ const ventasHoy = ventas.filter(v =>
 
 // Calcular total de ventas del día
 const totalVentasHoy = ventasHoy.reduce((sum, v) => sum + v.total, 0);
-document.getElementById('ventasHoy').textContent = `$${totalVentasHoy.toFixed(2)}`;
+document.getElementById('ventasHoy').textContent = `C$${totalVentasHoy.toFixed(2)}`;
+
 
 // Calcular platos más vendidos
 const platosVendidosHoy = {};
@@ -227,9 +229,9 @@ window.ventasChart = new Chart(ctx, {
                 beginAtZero: true,
                 ticks: {
                     callback: function(value) {
-                        return '$' + value.toFixed(2);
+                        return 'C$' + value.toFixed(2);
                     }
-                }
+                }                
             }
         }
     }
