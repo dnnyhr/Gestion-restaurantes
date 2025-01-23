@@ -381,3 +381,7 @@ function actualizarTablaVentasAnteriores() {
         </tr>
     `).join('');
 }
+document.getElementById('menuToggle').addEventListener('click', () => {
+    const menu = document.getElementById('menu');
+    menu.classList.toggle('hidden');
+});
