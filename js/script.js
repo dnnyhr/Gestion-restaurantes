@@ -383,7 +383,8 @@ function actualizarTablaVentasAnteriores() {
 }
 document.getElementById('menuToggle').addEventListener('click', () => {
     const menu = document.getElementById('menus');
-    
+
+    // Alternar entre mostrar y ocultar el menú
     if (menu.classList.contains('hidden')) {
         menu.classList.remove('hidden');
         menu.classList.add('flex', 'animate-slide-down'); // Mostrar con animación
@@ -391,5 +392,16 @@ document.getElementById('menuToggle').addEventListener('click', () => {
         menu.classList.add('hidden'); // Ocultar
         menu.classList.remove('flex', 'animate-slide-down');
     }
+});
+
+// Cerrar el menú automáticamente al seleccionar una opción
+document.querySelectorAll('#menu button').forEach(button => {
+    button.addEventListener('click', () => {
+        const menu = document.getElementById('menus');
+        if (!menu.classList.contains('hidden')) {
+            menu.classList.add('hidden'); // Ocultar menú
+            menu.classList.remove('flex', 'animate-slide-down');
+        }
+    });
 });
 
