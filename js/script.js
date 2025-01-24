@@ -381,27 +381,29 @@ function actualizarTablaVentasAnteriores() {
         </tr>
     `).join('');
 }
+// Mostrar/Ocultar el menú hamburguesa
 document.getElementById('menuToggle').addEventListener('click', () => {
-    const menu = document.getElementById('menus');
+    const menus = document.getElementById('menus');
 
     // Alternar entre mostrar y ocultar el menú
-    if (menu.classList.contains('hidden')) {
-        menu.classList.remove('hidden');
-        menu.classList.add('flex', 'animate-slide-down'); // Mostrar con animación
+    if (menus.classList.contains('hidden')) {
+        menus.classList.remove('hidden');
+        menus.classList.add('flex', 'animate-slide-down'); // Mostrar con animación
     } else {
-        menu.classList.add('hidden'); // Ocultar
-        menu.classList.remove('flex', 'animate-slide-down');
+        menus.classList.add('hidden'); // Ocultar
+        menus.classList.remove('flex', 'animate-slide-down');
     }
 });
 
 // Cerrar el menú automáticamente al seleccionar una opción
-document.querySelectorAll('#menu button').forEach(button => {
+document.querySelectorAll('#menus button').forEach(button => {
     button.addEventListener('click', () => {
-        const menu = document.getElementById('menus');
-        if (!menu.classList.contains('hidden')) {
-            menu.classList.add('hidden'); // Ocultar menú
-            menu.classList.remove('flex', 'animate-slide-down');
+        const menus = document.getElementById('menus');
+        if (!menus.classList.contains('hidden')) {
+            menus.classList.add('hidden'); // Ocultar menú
+            menus.classList.remove('flex', 'animate-slide-down');
         }
     });
 });
+
 
