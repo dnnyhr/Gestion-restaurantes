@@ -1,17 +1,8 @@
 // Estado de la aplicación
-const API_URL = 'http://localhost:3000';
+let menu = JSON.parse(localStorage.getItem('menu')) || [];
+let ventas = JSON.parse(localStorage.getItem('ventas')) || [];
+let nextId = 1;
 
-// Obtener el menú desde el backend
-async function cargarMenu() {
-    try {
-        const response = await fetch(`${API_URL}/menu`);
-        if (!response.ok) throw new Error('Error al cargar el menú');
-        menu = await response.json();
-        actualizarTablaMenu();
-    } catch (error) {
-        console.error(error.message);
-    }
-}
 // Funciones de utilidad
 function showSection(sectionId) {
     document.querySelectorAll('.section').forEach(section => {
@@ -20,7 +11,7 @@ function showSection(sectionId) {
     document.getElementById(sectionId).classList.remove('hidden');
 
     if (sectionId === 'estadisticas') {
-        cargarTodasLasEstadisticas();
+        actualizarEstadisticas();
     }
 
     if (sectionId === 'ventasAnteriores') {
@@ -41,55 +32,35 @@ function closeModal(modalId) {
 }
 
 // Gestión del Menú
-// Agregar un plato al menú
-async function agregarPlato(evento) {
+function agregarPlato(evento) {
     evento.preventDefault();
     const form = evento.target;
     const plato = {
+        id: nextId++,
         nombre: form.nombre.value,
         categoria: form.categoria.value,
-        precio: parseFloat(form.precio.value),
+        precio: parseFloat(form.precio.value)
     };
-
-    try {
-        const response = await fetch(`${API_URL}/menu`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(plato),
-        });
-        if (!response.ok) throw new Error('Error al agregar plato');
-        const nuevoPlato = await response.json();
-        menu.push(nuevoPlato);
-        actualizarTablaMenu();
-        closeModal('menuForm');
-        form.reset();
-    } catch (error) {
-        console.error(error.message);
-    }
+    menu.push(plato);
+    localStorage.setItem('menu', JSON.stringify(menu));
+    actualizarTablaMenu();
+    closeModal('menuForm');
+    form.reset();
 }
 
-
-// Eliminar un plato del menú
-async function eliminarPlato(id) {
-    try {
-        const response = await fetch(`${API_URL}/menu/${id}`, { method: 'DELETE' });
-        if (!response.ok) throw new Error('Error al eliminar plato');
-        menu = menu.filter(plato => plato.id !== id);
-        actualizarTablaMenu();
-    } catch (error) {
-        console.error(error.message);
-    }
+function eliminarPlato(id) {
+    menu = menu.filter(plato => plato.id !== id);
+    localStorage.setItem('menu', JSON.stringify(menu));
+    actualizarTablaMenu();
 }
 
-
-// Actualizar la tabla del menú
 function actualizarTablaMenu() {
     const tabla = document.getElementById('menuTable');
     tabla.innerHTML = menu.map(plato => `
         <tr>
             <td class="px-6 py-4">${plato.nombre}</td>
             <td class="px-6 py-4">${plato.categoria}</td>
-            <td class="px-6 py-4">C$${plato.precio.toFixed(2)}</td>
+           <td class="px-6 py-4">C$${plato.precio.toFixed(2)}</td>
             <td class="px-6 py-4">
                 <button onclick="eliminarPlato(${plato.id})" class="text-red-600 hover:text-red-900">Eliminar</button>
             </td>
@@ -120,8 +91,7 @@ function actualizarPlatosVenta() {
     agregarPlatoVenta();
 }
 
-// Registrar una venta en el backend
-async function registrarVenta(evento) {
+function registrarVenta(evento) {
     evento.preventDefault();
     const form = evento.target;
     const platosContainer = document.getElementById('platosContainer');
@@ -130,164 +100,157 @@ async function registrarVenta(evento) {
         const cantidad = parseInt(div.querySelector('input').value);
         const plato = menu.find(p => p.id === platoId);
         return {
-            platoId: plato.id,
+            plato: plato,
             cantidad: cantidad,
-            subtotal: plato.precio * cantidad,
+            subtotal: plato.precio * cantidad
         };
     });
 
     const venta = {
+        id: Date.now(),
         mesa: parseInt(form.mesa.value),
         platos: platosVenta,
         total: platosVenta.reduce((sum, item) => sum + item.subtotal, 0),
+        fecha: new Date().toISOString(), // Ya guarda fecha y hora exacta
+        hora: new Date().toLocaleTimeString() // Agrega la hora legible
     };
+    
 
-    try {
-        const response = await fetch(`${API_URL}/ventas`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(venta),
-        });
-        if (!response.ok) throw new Error('Error al registrar venta');
-        await cargarVentas();
-        closeModal('ventaForm');
-        form.reset();
-    } catch (error) {
-        console.error(error.message);
-    }
-}
-// Cargar ventas desde el backend
-async function cargarVentas() {
-    try {
-        const response = await fetch(`${API_URL}/ventas`);
-        if (!response.ok) throw new Error('Error al cargar ventas');
-        ventas = await response.json();
-        actualizarTablaVentas();
-    } catch (error) {
-        console.error(error.message);
-    }
+    ventas.push(venta);
+    localStorage.setItem('ventas', JSON.stringify(ventas));
+    actualizarTablaVentas();
+    closeModal('ventaForm');
+    form.reset();
 }
 
-// Cargar ventas desde el backend
-async function cargarVentas() {
-    try {
-        const response = await fetch(`${API_URL}/ventas`);
-        if (!response.ok) throw new Error('Error al cargar ventas');
-        ventas = await response.json();
-        actualizarTablaVentas();
-    } catch (error) {
-        console.error(error.message);
-    }
+function actualizarTablaVentas() {
+    const tabla = document.getElementById('ventasTable');
+    tabla.innerHTML = ventas.map(venta => `
+        <tr>
+            <td class="px-6 py-4">C$${venta.total.toFixed(2)}</td>
+<td class="px-6 py-4">
+    ${venta.platos.map(item => 
+        `${item.cantidad}x ${item.plato.nombre} (C$${item.subtotal.toFixed(2)})`
+    ).join('<br>')}
+</td>
+
+            <td class="px-6 py-4">$${venta.total.toFixed(2)}</td>
+            <td class="px-6 py-4">${new Date(venta.fecha).toLocaleDateString()}</td>
+            <td class="px-6 py-4">${venta.hora}</td> <!-- Nueva columna para hora -->
+        </tr>
+    `).join('');
 }
 
 
-
-async function cargarTodasLasEstadisticas() {
-    try {
-        // Cargar estadísticas diarias
-        const responseDiarias = await fetch(`${API_URL}/ventas`);
-        if (!responseDiarias.ok) throw new Error('Error al cargar estadísticas diarias');
-        ventas = await responseDiarias.json(); // Actualizamos la lista de ventas
-        actualizarEstadisticasDiarias(); // Usamos la función centralizada para actualizar estadísticas
-
-        // Cargar estadísticas mensuales
-        const responseMensuales = await fetch(`${API_URL}/estadisticas/mensuales`);
-        if (!responseMensuales.ok) throw new Error('Error al cargar estadísticas mensuales');
-        const ventasMensuales = await responseMensuales.json();
-
-        actualizarGraficaMensual(ventasMensuales);
-    } catch (error) {
-        console.error(error.message);
-    }
+// Estadísticas
+function actualizarEstadisticas() {
+actualizarEstadisticasDiarias();
+actualizarGraficaMensual();
 }
-
-
 
 function actualizarEstadisticasDiarias() {
-    const hoy = new Date().toLocaleDateString();
-    const ventasHoy = ventas.filter(v => 
-        new Date(v.fecha).toLocaleDateString() === hoy
-    );
+const hoy = new Date().toLocaleDateString();
+const ventasHoy = ventas.filter(v => 
+    new Date(v.fecha).toLocaleDateString() === hoy
+);
 
-    // Calcular total de ventas del día
-    const totalVentasHoy = ventasHoy.reduce((sum, v) => sum + v.total, 0);
-    document.getElementById('ventasHoy').textContent = `C$${totalVentasHoy.toFixed(2)}`;
+// Calcular total de ventas del día
+const totalVentasHoy = ventasHoy.reduce((sum, v) => sum + v.total, 0);
+document.getElementById('ventasHoy').textContent = `C$${totalVentasHoy.toFixed(2)}`;
 
-    // Calcular platos más vendidos
-    const platosVendidosHoy = {};
-    ventasHoy.forEach(venta => {
-        venta.platos.forEach(item => {
-            const nombrePlato = item.plato.nombre;
-            if (!platosVendidosHoy[nombrePlato]) {
-                platosVendidosHoy[nombrePlato] = 0;
-            }
-            platosVendidosHoy[nombrePlato] += item.cantidad;
-        });
+
+// Calcular platos más vendidos
+const platosVendidosHoy = {};
+ventasHoy.forEach(venta => {
+    venta.platos.forEach(item => {
+        const nombrePlato = item.plato.nombre;
+        if (!platosVendidosHoy[nombrePlato]) {
+            platosVendidosHoy[nombrePlato] = 0;
+        }
+        platosVendidosHoy[nombrePlato] += item.cantidad;
     });
+});
 
-    const platosMasVendidos = Object.entries(platosVendidosHoy)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
+const platosMasVendidos = Object.entries(platosVendidosHoy)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
 
-    const listaPlatosMasVendidos = document.getElementById('platosMasVendidosHoy');
-    listaPlatosMasVendidos.innerHTML = platosMasVendidos
-        .map(([plato, cantidad]) => 
-            `<li class="text-sm">${plato}: ${cantidad} unidades</li>`
-        ).join('');
+const listaPlatosMasVendidos = document.getElementById('platosMasVendidosHoy');
+listaPlatosMasVendidos.innerHTML = platosMasVendidos
+    .map(([plato, cantidad]) => 
+        `<li class="text-sm">${plato}: ${cantidad} unidades</li>`
+    ).join('');
 
     // Actualizar gráfica diaria de platos
-    actualizarGraficaDiariaPlatos(platosMasVendidos);
+    actualizarGraficaDiariaPlatos();
     actualizarGraficaConcurrenciaDiaria();
 }
 
+function actualizarGraficaMensual() {
+const mesActual = new Date().getMonth();
+const añoActual = new Date().getFullYear();
 
-function actualizarGraficaMensual(ventasMensuales) {
-    const ctx = document.getElementById('ventasMensualesChart').getContext('2d');
-    const dias = ventasMensuales.map(v => v.dia);
-    const totales = ventasMensuales.map(v => v.total);
+// Preparar datos para el gráfico
+const ventasPorDia = {};
+for (let i = 1; i <= 31; i++) {
+    ventasPorDia[i] = 0;
+}
 
-    if (window.ventasMensualesChart) window.ventasMensualesChart.destroy(); // Destruir gráfica anterior
+ventas.forEach(venta => {
+    const fecha = new Date(venta.fecha);
+    if (fecha.getMonth() === mesActual && fecha.getFullYear() === añoActual) {
+        const dia = fecha.getDate();
+        ventasPorDia[dia] += venta.total;
+    }
+});
 
-    window.ventasMensualesChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: dias,
-            datasets: [{
-                label: 'Ventas Diarias',
-                data: totales,
-                borderColor: 'rgba(54, 162, 235, 1)',
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                tension: 0.3,
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: value => `C$${value.toFixed(2)}`,
-                    },
-                },
-            },
-        },
-    });
+const ctx = document.getElementById('ventasMensualesChart').getContext('2d');
+
+// Destruir gráfico anterior si existe
+if (window.ventasChart) {
+    window.ventasChart.destroy();
+}
+
+window.ventasChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: Object.keys(ventasPorDia),
+        datasets: [{
+            label: 'Ventas Diarias',
+            data: Object.values(ventasPorDia),
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return 'C$' + value.toFixed(2);
+                    }
+                }                
+            }
+        }
+    }
+});
 }
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {
-    // Cargar datos desde el backend
-    cargarMenu();
-    cargarVentas();
+// Inicializar tablas
+actualizarTablaMenu();
+actualizarTablaVentas();
 
-    // Configurar formularios
-    document.getElementById('newDishForm').addEventListener('submit', agregarPlato);
-    document.getElementById('newSaleForm').addEventListener('submit', registrarVenta);
+// Configurar formularios
+document.getElementById('newDishForm').addEventListener('submit', agregarPlato);
+document.getElementById('newSaleForm').addEventListener('submit', registrarVenta);
 
-    // Mostrar sección inicial
-    showSection('menu');
+// Mostrar sección inicial
+showSection('menu');
 });
-
 function calcularVentasDiariasPorPlato() {
     const hoy = new Date().toLocaleDateString();
     const ventasHoy = ventas.filter(v => 
@@ -308,13 +271,19 @@ function calcularVentasDiariasPorPlato() {
 
     return conteoPlatos;
 }
-function actualizarGraficaDiariaPlatos(platosMasVendidos) {
+function actualizarGraficaDiariaPlatos() {
+    const conteoPlatos = calcularVentasDiariasPorPlato();
+    const nombresPlatos = Object.keys(conteoPlatos);
+    const cantidades = Object.values(conteoPlatos);
+
     const ctx = document.getElementById('ventasDiariasPlatosChart').getContext('2d');
-    const nombresPlatos = platosMasVendidos.map(([plato]) => plato);
-    const cantidades = platosMasVendidos.map(([, cantidad]) => cantidad);
 
-    if (window.platosChart) window.platosChart.destroy(); // Destruir gráfica anterior
+    // Destruir gráfica anterior si existe
+    if (window.platosChart) {
+        window.platosChart.destroy();
+    }
 
+    // Crear nueva gráfica
     window.platosChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -322,20 +291,24 @@ function actualizarGraficaDiariaPlatos(platosMasVendidos) {
             datasets: [{
                 label: 'Unidades Vendidas',
                 data: cantidades,
-                backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
             }]
         },
         options: {
             responsive: true,
             scales: {
-                y: { beginAtZero: true },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
             }
         }
     });
 }
-
 function calcularVentasPorHora() {
     const hoy = new Date().toLocaleDateString();
     const ventasHoy = ventas.filter(v => 
@@ -352,22 +325,17 @@ function calcularVentasPorHora() {
     return ventasPorHora;
 }
 function actualizarGraficaConcurrenciaDiaria() {
-    const ventasPorHora = Array(24).fill(0);
-    const hoy = new Date().toLocaleDateString();
-    const ventasHoy = ventas.filter(v => 
-        new Date(v.fecha).toLocaleDateString() === hoy
-    );
-
-    ventasHoy.forEach(venta => {
-        const hora = new Date(venta.fecha).getHours();
-        ventasPorHora[hora]++;
-    });
-
-    const ctx = document.getElementById('concurrenciaDiariaChart').getContext('2d');
+    const ventasPorHora = calcularVentasPorHora();
     const horas = Array.from({ length: 24 }, (_, i) => `${i}:00 - ${i + 1}:00`);
 
-    if (window.concurrenciaChart) window.concurrenciaChart.destroy(); // Destruir gráfica anterior
+    const ctx = document.getElementById('concurrenciaDiariaChart').getContext('2d');
 
+    // Destruir gráfica anterior si existe
+    if (window.concurrenciaChart) {
+        window.concurrenciaChart.destroy();
+    }
+
+    // Crear nueva gráfica
     window.concurrenciaChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -377,18 +345,22 @@ function actualizarGraficaConcurrenciaDiaria() {
                 data: ventasPorHora,
                 backgroundColor: 'rgba(255, 99, 132, 0.6)',
                 borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1,
+                borderWidth: 1
             }]
         },
         options: {
             responsive: true,
             scales: {
-                y: { beginAtZero: true },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
             }
         }
     });
 }
-
 function actualizarTablaVentasAnteriores() {
     // Ordenar las ventas por fecha (más recientes primero)
     const ventasOrdenadas = [...ventas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
@@ -433,5 +405,4 @@ document.querySelectorAll('#menus button').forEach(button => {
         }
     });
 });
-
 
